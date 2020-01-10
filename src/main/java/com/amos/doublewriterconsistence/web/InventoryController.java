@@ -85,10 +85,12 @@ public class InventoryController {
                     break;
                 }
                 inventory = this.inventoryService.getInventoryCache(id);
+                this.logger.info("从缓存中获取对象:{}",inventory);
                 if (null != inventory) {
                     this.logger.info("从缓存中获取到数据");
                     return ResultWapper.success(inventory);
                 } else {
+                    this.logger.info("缓存对象为空，等待20s");
                     Thread.sleep(20);
                     waitTime = System.currentTimeMillis() - startTime;
                 }
@@ -97,6 +99,7 @@ public class InventoryController {
 
             // 直接从数据库中获取数据
             inventory = this.inventoryService.selectById(id);
+            this.logger.info("从数据库中获取对象:{}",inventory);
             if (null != inventory) {
                 request = new InventoryCacheRequest(id, this.inventoryService, Boolean.TRUE);
                 this.requestAsyncProcessService.route(request);

@@ -24,7 +24,7 @@ import java.util.concurrent.Callable;
  * @date: 2019/7/15 0015 下午 14:34
  * @Version: V1.0
  */
-public class RequestThread implements Callable<Boolean> {
+public class RequestThread implements Runnable {
     public final Logger logger = LoggerFactory.getLogger(this.getClass());
     /**
      * 队列
@@ -42,9 +42,10 @@ public class RequestThread implements Callable<Boolean> {
      * @throws Exception
      */
     @Override
-    public Boolean call() throws Exception {
-        try {
-            while (true) {
+    public void run() {
+
+        while (true) {
+            try {
                 // ArrayBlockingQueue take方法 获取队列排在首位的对象，如果队列为空或者队列满了，则会被阻塞住
                 Request request = this.queue.take();
                 Boolean forceFresh = request.isForceRefresh();
@@ -68,7 +69,7 @@ public class RequestThread implements Callable<Boolean> {
                         // tag不为空，并且为false时，说明前面已经有数据库+缓存的请求了，
                         // 那么这个请求应该是读请求，可以直接过滤掉了，不要添加到队列中
                         if (tag != null && !tag) {
-                            return Boolean.TRUE;
+                            continue;
                         }
 
                     } else if (request instanceof InventoryDBRequest) {
@@ -79,10 +80,9 @@ public class RequestThread implements Callable<Boolean> {
                 // 执行请求处理
                 this.logger.info("缓存队列执行+++++++++++++++++，{}", request.getInventoryId());
                 request.process();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-        return Boolean.TRUE;
     }
 }

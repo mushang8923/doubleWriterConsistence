@@ -895,50 +895,49 @@ mybatis:
      * @return
      * @throws Exception
      */
-    @Override
-    public Boolean call() throws Exception {
-        try {
-            while (true) {
-                // ArrayBlockingQueue take方法 获取队列排在首位的对象，如果队列为空或者队列满了，则会被阻塞住
-                Request request = this.queue.take();
-                Boolean forceFresh = request.isForceRefresh();
-                // 如果需要更新的话
-                if (!forceFresh) {
-                    RequestQueue requestQueue = RequestQueue.getInstance();
-                    Map<String, Boolean> tagMap = requestQueue.getTagMap();
-                    // 如果是请求缓存中的数据
-                    if (request instanceof InventoryCacheRequest) {
-                        Boolean tag = tagMap.get(request.getInventoryId());
-                        // 如果tag为空 则说明读取缓存的操作
-                        if (null == tag) {
-                            tagMap.put(request.getInventoryId(), Boolean.FALSE);
-                        }
-                        // tag为不为空，并且为true时，说明上一个请求是更新数据库的
-                        // 那么此时我们需要将标志位修改为False
-                        if (tag != null && tag) {
-                            tagMap.put(request.getInventoryId(), Boolean.FALSE);
-                        }
-
-                        // tag不为空，并且为false时，说明前面已经有数据库+缓存的请求了，
-                        // 那么这个请求应该是读请求，可以直接过滤掉了，不要添加到队列中
-                        if (tag != null && !tag) {
-                            return Boolean.TRUE;
-                        }
-
-                    } else if (request instanceof InventoryDBRequest) {
-                        // 如果是更新数据库的操作
-                        tagMap.put(request.getInventoryId(), Boolean.TRUE);
-                    }
-                }
-                // 执行请求处理
-                this.logger.info("缓存队列执行+++++++++++++++++，{}", request.getInventoryId());
-                request.process();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Boolean.TRUE;
-    }
+       public void run() {
+   
+           while (true) {
+               try {
+                   // ArrayBlockingQueue take方法 获取队列排在首位的对象，如果队列为空或者队列满了，则会被阻塞住
+                   Request request = this.queue.take();
+                   Boolean forceFresh = request.isForceRefresh();
+                   // 如果需要更新的话
+                   if (!forceFresh) {
+                       RequestQueue requestQueue = RequestQueue.getInstance();
+                       Map<String, Boolean> tagMap = requestQueue.getTagMap();
+                       // 如果是请求缓存中的数据
+                       if (request instanceof InventoryCacheRequest) {
+                           Boolean tag = tagMap.get(request.getInventoryId());
+                           // 如果tag为空 则说明读取缓存的操作
+                           if (null == tag) {
+                               tagMap.put(request.getInventoryId(), Boolean.FALSE);
+                           }
+                           // tag为不为空，并且为true时，说明上一个请求是更新数据库的
+                           // 那么此时我们需要将标志位修改为False
+                           if (tag != null && tag) {
+                               tagMap.put(request.getInventoryId(), Boolean.FALSE);
+                           }
+   
+                           // tag不为空，并且为false时，说明前面已经有数据库+缓存的请求了，
+                           // 那么这个请求应该是读请求，可以直接过滤掉了，不要添加到队列中
+                           if (tag != null && !tag) {
+                               continue;
+                           }
+   
+                       } else if (request instanceof InventoryDBRequest) {
+                           // 如果是更新数据库的操作
+                           tagMap.put(request.getInventoryId(), Boolean.TRUE);
+                       }
+                   }
+                   // 执行请求处理
+                   this.logger.info("缓存队列执行+++++++++++++++++，{}", request.getInventoryId());
+                   request.process();
+               } catch (Exception e) {
+                   e.printStackTrace();
+               }
+           }
+       }
 ```
 至此,处理业务逻辑的代码我们已经完成了，这里需要注意一点，所有的请求我们都需要打入到缓存队列中来执行下，所以同一库存，我们需要他打入到同一缓存队列中进行处理，如何来实现这个这功能呢？ 这里我们使用hash值取模的方式来实现
 
@@ -1101,6 +1100,4 @@ mybatis:
             }
         }
     }
-```
-上面详细的代码可以参考我的Gitee——[doubleWriterConsistence](https://gitee.com/amos_zhu/doubleWriterConsistence)
 
