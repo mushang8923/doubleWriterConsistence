@@ -1,0 +1,19 @@
+server:
+  port: 1000
+
+spring:
+  redis:
+    host: 172.28.8.33
+    port: 7379
+    password: ctfAdmin
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    username: code
+    password: Ctf123456
+    url: jdbc:mysql://172.28.8.30:3306/testdb?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=GMT%2B8
+  cache:
+    jcache:
+      config: classpath*:ehcache.xml
+mybatis:
+  config-location: classpath:/mybatis/config/mybatis-config.xml
+  mapper-locations: classpath:/mybatis/mapper/*.xml

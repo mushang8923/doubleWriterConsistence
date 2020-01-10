@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.amos.doublewriterconsistence.mapper.InventoryMapper">
+
+    <select id="selectById" resultType="com.amos.doublewriterconsistence.entity.Inventory">
+        select id, name,count from inventory where id = #{id}
+    </select>
+
+    <update id="update">
+        update inventory set count = #{record.count} where id = #{record.id}
+    </update>
+
+    <delete id="delete">
+        delete from inventory where id = #{id}
+    </delete>
+</mapper>
